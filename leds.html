@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control de LEDs - ESP32</title>
+  <meta charset="UTF-8" />
+</head>
+<body>
+  <h1>Control de LEDs vía Ubidots</h1>
+  <p>Haz clic en los botones para encender o apagar cada LED.</p>
+
+  <div id="buttons">
+    <button onclick="setLED('led1', 1)">LED 1 ON</button>
+    <button onclick="setLED('led1', 0)">LED 1 OFF</button><br><br>
+    <button onclick="setLED('led2', 1)">LED 2 ON</button>
+    <button onclick="setLED('led2', 0)">LED 2 OFF</button><br><br>
+    <button onclick="setLED('led3', 1)">LED 3 ON</button>
+    <button onclick="setLED('led3', 0)">LED 3 OFF</button><br><br>
+    <button onclick="setLED('led4', 1)">LED 4 ON</button>
+    <button onclick="setLED('led4', 0)">LED 4 OFF</button><br><br>
+  </div>
+
+  <script>
+    const TOKEN = "BBUS-p47ZMLdmyXolBdSU0y6rp0gpUQf0Wy";
+    const DEVICE = "esp32-webcontrol";
+
+    async function setLED(led, value) {
+      const url = `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/`;
+      const body = {};
+      body[led] = value;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-Auth-Token": TOKEN,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        alert(`LED ${led} → ${value === 1 ? "ENCENDIDO" : "APAGADO"}`);
+      } else {
+        alert("Error al cambiar estado del LED");
+      }
+    }
+  </script>
+</body>
+</html>
