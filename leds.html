@@ -1,48 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
   <title>Control de LEDs - ESP32</title>
-  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #1f2937;
+    }
+    .led-button {
+      display: inline-block;
+      margin: 15px;
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .on {
+      background-color: #22c55e;
+      color: white;
+    }
+    .off {
+      background-color: #ef4444;
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <h1>Control de LEDs vía Ubidots</h1>
-  <p>Haz clic en los botones para encender o apagar cada LED.</p>
+  <p>Haz clic para alternar el estado de cada LED:</p>
 
   <div id="buttons">
-    <button onclick="setLED('led1', 1)">LED 1 ON</button>
-    <button onclick="setLED('led1', 0)">LED 1 OFF</button><br><br>
-    <button onclick="setLED('led2', 1)">LED 2 ON</button>
-    <button onclick="setLED('led2', 0)">LED 2 OFF</button><br><br>
-    <button onclick="setLED('led3', 1)">LED 3 ON</button>
-    <button onclick="setLED('led3', 0)">LED 3 OFF</button><br><br>
-    <button onclick="setLED('led4', 1)">LED 4 ON</button>
-    <button onclick="setLED('led4', 0)">LED 4 OFF</button><br><br>
+    <button class="led-button off" id="led1" onclick="toggleLED('led1')">LED 1: OFF</button>
+    <button class="led-button off" id="led2" onclick="toggleLED('led2')">LED 2: OFF</button>
+    <button class="led-button off" id="led3" onclick="toggleLED('led3')">LED 3: OFF</button>
+    <button class="led-button off" id="led4" onclick="toggleLED('led4')">LED 4: OFF</button>
   </div>
 
   <script>
     const TOKEN = "BBUS-p47ZMLdmyXolBdSU0y6rp0gpUQf0Wy";
     const DEVICE = "esp32-webcontrol";
 
-    async function setLED(led, value) {
+    const ledStates = {
+      led1: 0,
+      led2: 0,
+      led3: 0,
+      led4: 0
+    };
+
+    function updateButtonUI(led) {
+      const button = document.getElementById(led);
+      const isOn = ledStates[led] === 1;
+      button.className = "led-button " + (isOn ? "on" : "off");
+      button.textContent = `${led.toUpperCase()}: ${isOn ? "ON" : "OFF"}`;
+    }
+
+    async function toggleLED(led) {
+      ledStates[led] = 1 - ledStates[led]; // Cambia 0 <-> 1
+      updateButtonUI(led);
+
       const url = `https://industrial.api.ubidots.com/api/v1.6/devices/${DEVICE}/`;
       const body = {};
-      body[led] = value;
+      body[led] = ledStates[led];
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "X-Auth-Token": TOKEN,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "X-Auth-Token": TOKEN,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
 
-      if (res.ok) {
-        alert(`LED ${led} → ${value === 1 ? "ENCENDIDO" : "APAGADO"}`);
-      } else {
-        alert("Error al cambiar estado del LED");
+        if (!res.ok) {
+          alert("Error al enviar a Ubidots");
+        }
+      } catch (err) {
+        alert("Error de red");
       }
     }
   </script>
 </body>
 </html>
+
